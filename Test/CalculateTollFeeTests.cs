@@ -79,21 +79,19 @@ namespace Test
         }
 
         [TestMethod]
-        public void Should_print_the_total_cost_for_passages()
-        {
+        public void Should_print_the_total_cost_for_passages() {
             var input = (Environment.CurrentDirectory + "../../../../mockTestData.txt");
             var expected = "The total fee for the inputfile is 29";
             var sw = new StringWriter();
             Console.SetOut(sw);
-            CalculateTollFee.PrintTotalFee(input);
+            CalculateTollFee.PrintTotalFee(CalculateTollFee.CalculateTotalFee(CalculateTollFee.GetPassagesFromFile(input)));
             Assert.AreEqual(expected, sw.ToString());
         }
 
         [TestMethod]
-        public void Should_throw_expected_exception_If_input_data_cannot_be_parsed()
-        {
+        public void Should_throw_expected_exception_If_input_data_cannot_be_parsed() {
             var input = (Environment.CurrentDirectory + "../../../../mockInvalidTestData.txt");
-            Assert.ThrowsException<ArgumentException>(() => CalculateTollFee.PrintTotalFee(input));
+            Assert.ThrowsException<ArgumentException>(() => CalculateTollFee.GetPassagesFromFile(input));
         }
 
     }
