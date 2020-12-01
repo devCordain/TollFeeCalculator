@@ -5,105 +5,107 @@ using System.Linq;
 namespace TollFeeCalculator
 {
     public class CalculateTollFee
-    {
-        //Programmets mål är att beräkna kostnaden för en given inputfil innehållande datum och tider
-        //som en bil åker genom vägtullarna under en dag.Programmet ska utifrån detta skriva ut i
-        //terminalen hur mycket den totala kostnaden är. Varje passage genom en betalstation kostar
-        //0, 8, 13 eller 18 kronor beroende på tidpunkt. Det maximala beloppet per dag är 60 kronor.
+    {  
+        private static readonly List<TollFeeInterval> _tollFeeIntervals = new List<TollFeeInterval> {
+                new TollFeeInterval( new TimeSpan (6, 0, 0), new TimeSpan(6, 29, 0), 8),
+                new TollFeeInterval( new TimeSpan (6, 30, 0), new TimeSpan(6, 59, 0), 13),
+                new TollFeeInterval( new TimeSpan (7, 0, 0), new TimeSpan(7, 59, 0), 18),
+                new TollFeeInterval( new TimeSpan (8, 0, 0), new TimeSpan(8, 29, 0), 13),
+                new TollFeeInterval( new TimeSpan (8, 30, 0), new TimeSpan(14, 59, 0), 8),
+                new TollFeeInterval( new TimeSpan (15, 0, 0), new TimeSpan(15, 29, 0), 13),
+                new TollFeeInterval( new TimeSpan (15, 30, 0), new TimeSpan(16, 59, 0), 18),
+                new TollFeeInterval( new TimeSpan (17, 0, 0), new TimeSpan(17, 59, 0), 13),
+                new TollFeeInterval( new TimeSpan (18, 0, 0), new TimeSpan(18, 29, 0), 8)
+        };
+        private const int MAX_DAILY_FEE = 60;
 
-        //Tider Belopp
-        //06:00–06:29 - 8 kr
-        //06:30–06:59 - 13 kr
-        //07:00–07:59 - 18 kr
-        //08:00–08:29 - 13 kr
-        //08:30–14:59 - 8 kr
-        //15:00–15:29 - 13 kr
-        //15:30–16:59 - 18 kr
-        //17:00–17:59 - 13 kr
-        //18:00–18:29 - 8 kr
-        //18:30–05:59 - 0 kr
-
-        //Vägtull tas ut för fordon som passerar en betalstation måndag till fredag mellan 06.00 och
-        //18.29. Tull tas inte ut lördagar och söndagar eller under juli månad.En bil som passerar flera
-        //betalstationer inom 60 minuter beskattas bara en gång.Det belopp som då ska betalas är
-        //det högsta beloppet av de passagerna.
-
-       static void Main()
+        static void Main()
         {
-            run(Environment.CurrentDirectory + "../../../../testData.txt");
+            PrintTotalFee(Environment.CurrentDirectory + "../../../../testData.txt");
         }
 
-        public static void run(String inputFile) {
-            string indata = System.IO.File.ReadAllText(inputFile);
-            String[] dateStrings = indata.Split(", ");
-            DateTime[] dates = new DateTime[dateStrings.Length-1]; //TODO: wrong size
-            for(int i = 0; i < dates.Length; i++) {
-                dates[i] = DateTime.Parse(dateStrings[i]);
+        public static void PrintTotalFee(String filePath) {
+            var passageData = System.IO.File.ReadAllText(filePath).Split(", ");
+            List<DateTime> passages = new List<DateTime>();
+            foreach (var passage in passageData) {
+                if (DateTime.TryParse(passage, out DateTime parsedPassage)) {
+                    passages.Add(parsedPassage);
+                }
+                else {
+                    throw new ArgumentException("Could not convert passage to datetime");
+                }
             }
-            Console.Write("The total fee for the inputfile is" + TotalFeeCost(dates)); //TODO: add space
+            Console.Write("The total fee for the inputfile is " + CalculateTotalFee(passages));
         }
 
-        public static int TotalFeeCost(DateTime[] passages) {
+        public static int CalculateTotalFee(IEnumerable<DateTime> passages) {
             int totalFee = 0;
-            var passagesSortedAndDividedByDate = DivideIntoListByDate(OrderAscendingByDate(passages.ToList()));
+            var passagesSortedAndDividedByDate = DivideByDate(OrderAscendingByDate(passages.ToList()));
             foreach (var dailyPassages in passagesSortedAndDividedByDate) {
-                totalFee += CalculateDailyTotalOrMaxFee(dailyPassages);
+                var dailyTotalFee = CalculateDailyFee(dailyPassages);
+                if (dailyTotalFee > MAX_DAILY_FEE ) {
+                    totalFee += MAX_DAILY_FEE;
+                }
+                else {
+                    totalFee += dailyTotalFee;
+                }
             }
             return totalFee;
         }
 
-        private static List<DateTime> OrderAscendingByDate(List<DateTime> passagesList) {
-            return passagesList.OrderBy(x => x.Date).ToList();
-        }
-
-        private static List<DateTime[]> DivideIntoListByDate(List<DateTime> passages) {
+        private static IEnumerable<DateTime[]> DivideByDate(IEnumerable<DateTime> passages) {
             return passages.ToList()
                 .GroupBy(x => x.Date)
                 .Select(y => y.ToArray())
                 .ToList();
+        } // TODO: beräkna kostnaden för en given inputfil innehållande datum och tider som en bil åker genom vägtullarna under en dag.
+        // Ska vi förvänta oss att vi får enbart 1 dag i filen? Testfilen innehåller fler dagar, så vi har byggt funktionalitet för att hantera det. 
+        // Ska vi ha flera dagar eller ska vi kasta exception? Ska vi skriva ut separerat per dag om det innnehåller flera dagar? Eller en totalsumma för samtliga dagar? Eller båda?
+
+        private static IEnumerable<DateTime> OrderAscendingByDate(IEnumerable<DateTime> passagesList) {
+            return passagesList.OrderBy(x => x.Date).ToList();
         }
 
-        public static int CalculateDailyTotalOrMaxFee(DateTime[] dailyPassages) {
-            int dailyFee = 0;
-            int hourlyFee = 0;
+        private static int CalculateDailyFee(IEnumerable<DateTime> dailyPassages) {
+            int totalDailyFee = 0;
+            int totalHourlyFee = 0;
             var referencePassage = dailyPassages.First(); 
             foreach (var passage in dailyPassages)
             {
                 if (IsLessThanAnHourApart(referencePassage, passage)) {
-                    hourlyFee = Math.Max(TollFeePass(referencePassage), TollFeePass(passage));
+                    totalHourlyFee = Math.Max(GetTollFee(referencePassage), GetTollFee(passage));
                 }
                 else {
-                    dailyFee += hourlyFee;
-                    hourlyFee = TollFeePass(passage);
+                    totalDailyFee += totalHourlyFee;
+                    totalHourlyFee = GetTollFee(passage);
                     referencePassage = passage;
                 }
             }
-            dailyFee += hourlyFee;
-            return Math.Min(dailyFee, 60);
+            totalDailyFee += totalHourlyFee;
+            return totalDailyFee;
         }
 
         private static bool IsLessThanAnHourApart(DateTime referencePassage, DateTime passage) { 
             return (passage - referencePassage).TotalMinutes < 60;
         }
 
-        public static int TollFeePass(DateTime d) {
-            if (IsPassageOnAFreeDayOrMonth(d)) return 0;
-            int hour = d.Hour;
-            int minute = d.Minute;
-            if (hour == 6 && minute >= 0 && minute <= 29) return 8;
-            else if (hour == 6 && minute >= 30 && minute <= 59) return 13;
-            else if (hour == 7 && minute >= 0 && minute <= 59) return 18;
-            else if (hour == 8 && minute >= 0 && minute <= 29) return 13;
-            else if (hour >= 8 && hour <= 14 && minute >= 30 && minute <= 59) return 8;
-            else if (hour == 15 && minute >= 0 && minute <= 29) return 13;
-            else if (hour == 15 && minute >= 30 || hour == 16 && minute <= 59) return 18;
-            else if (hour == 17 && minute >= 0 && minute <= 59) return 13;
-            else if (hour == 18 && minute >= 0 && minute <= 29) return 8;
-            else return 0;
+        public static int GetTollFee(DateTime passage) {
+            if (IsPassageOnAFreeDayOrMonth(passage)) return 0;
+            var timeOfDay = passage.TimeOfDay;
+            foreach (var tollFee in _tollFeeIntervals) {
+                var startOfInterval = tollFee.StartInterval;
+                var endOfInterval = tollFee.EndInterval;
+                var fee = tollFee.Fee;
+                if (timeOfDay >= startOfInterval && timeOfDay <= endOfInterval) return fee;
+            }
+            return 0;
         }
 
-        public static bool IsPassageOnAFreeDayOrMonth(DateTime day) {
-        return (int)day.DayOfWeek == 6 || (int)day.DayOfWeek == 0 || day.Month == 7;
+        public static bool IsPassageOnAFreeDayOrMonth(DateTime passage) {
+            return
+                passage.Month == 7 ||
+                passage.DayOfWeek == DayOfWeek.Saturday ||
+                passage.DayOfWeek == DayOfWeek.Sunday;
         }
     }
 }

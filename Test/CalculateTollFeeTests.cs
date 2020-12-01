@@ -1,5 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.IO;
 using TollFeeCalculator;
 
 namespace Test
@@ -7,30 +8,6 @@ namespace Test
     [TestClass]
     public class CalulateTollFeeTests
     {
-
-        //Programmets mål är att beräkna kostnaden för en given inputfil innehållande datum och tider
-        //som en bil åker genom vägtullarna under en dag.Programmet ska utifrån detta skriva ut i
-        //terminalen hur mycket den totala kostnaden är.Varje passage genom en betalstation kostar
-        //0, 8, 13 eller 18 kronor beroende på tidpunkt. Det maximala beloppet per dag är 60 kronor.
-
-        //Tider Belopp
-        //06:00–06:29 - 8 kr
-        //06:30–06:59 - 13 kr
-        //07:00–07:59 - 18 kr
-        //08:00–08:29 - 13 kr
-        //08:30–14:59 - 8 kr
-        //15:00–15:29 - 13 kr
-        //15:30–16:59 - 18 kr
-        //17:00–17:59 - 13 kr
-        //18:00–18:29 - 8 kr
-        //18:30–05:59 - 0 kr
-
-        //Vägtull tas ut för fordon som passerar en betalstation måndag till fredag mellan 06.00 och
-        //18.29. Tull tas inte ut lördagar och söndagar eller under juli månad.En bil som passerar flera
-        //betalstationer inom 60 minuter beskattas bara en gång.Det belopp som då ska betalas är
-        //det högsta beloppet av de passagerna.
-
-
         [DataTestMethod]
         [DataRow("2020 - 11 - 28 10:13")]
         [DataRow("2020 - 11 - 29 10:13")] 
@@ -69,7 +46,7 @@ namespace Test
         [DataRow("2020 - 11 - 30 05:59", 0)]
         public void Should_return_correct_tollFee_for_each_passageTime(string tollBoothPassageTime, int tollFee) {
             var input = DateTime.Parse(tollBoothPassageTime);
-            Assert.AreEqual(tollFee, CalculateTollFee.TollFeePass(input));
+            Assert.AreEqual(tollFee, CalculateTollFee.GetTollFee(input));
         }
 
         [TestMethod]
@@ -79,7 +56,7 @@ namespace Test
             {
                 input[i] = new DateTime(2020, 11, 30, i, 30, 00);
             }
-            Assert.AreEqual(60, CalculateTollFee.TotalFeeCost(input));
+            Assert.AreEqual(60, CalculateTollFee.CalculateTotalFee(input));
         }
 
         [TestMethod]
@@ -94,7 +71,7 @@ namespace Test
                 new DateTime(2020, 11, 30, 15, 15, 00),
                 new DateTime(2020, 11, 30, 15, 35, 00)
             };
-            Assert.AreEqual(39, CalculateTollFee.TotalFeeCost(input));
+            Assert.AreEqual(39, CalculateTollFee.CalculateTotalFee(input));
         }
 
         [TestMethod]
@@ -104,7 +81,25 @@ namespace Test
             {
                 input[i] = new DateTime(2020, 11, 30, i, 30, 00);
             }
-            Assert.AreEqual(60, CalculateTollFee.TotalFeeCost(input));
+            Assert.AreEqual(60, CalculateTollFee.CalculateTotalFee(input));
+        }
+
+        [TestMethod]
+        public void Should_print_the_total_cost_for_passages()
+        {
+            var input = (Environment.CurrentDirectory + "../../../../mockTestData.txt");
+            var expected = "The total fee for the inputfile is 29";
+            var sw = new StringWriter();
+            Console.SetOut(sw);
+            CalculateTollFee.PrintTotalFee(input);
+            Assert.AreEqual(expected, sw.ToString());
+        }
+
+        [TestMethod]
+        public void Should_throw_expected_exception_If_input_data_cannot_be_parsed()
+        {
+            var input = (Environment.CurrentDirectory + "../../../../mockInvalidTestData.txt");
+            Assert.ThrowsException<ArgumentException>(() => CalculateTollFee.PrintTotalFee(input));
         }
 
     }
