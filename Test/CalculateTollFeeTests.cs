@@ -12,15 +12,9 @@ namespace Test
         [DataRow("2020 - 11 - 28 10:13")]
         [DataRow("2020 - 11 - 29 10:13")] 
         [DataRow("2020 - 07 - 28 10:13")]
-        public void Should_return_True_if_DayOfTheWeek_is_saturday_or_sunday_or_during_july(string tollBoothPassageTime) {
+        public void Should_return_expected_fee_if_DayOfTheWeek_is_saturday_or_sunday_or_during_july(string tollBoothPassageTime) {
             var input = DateTime.Parse(tollBoothPassageTime);
-            Assert.IsTrue(CalculateTollFee.IsPassageOnAFreeDayOrMonth(input));
-        }
-
-        [TestMethod]
-        public void Should_return_False_if_DayOfTheWeek_is_Not_saturday_or_sunday_or_during_july() {
-            var input = new DateTime(2020, 11, 30, 10, 13, 00);
-            Assert.IsFalse(CalculateTollFee.IsPassageOnAFreeDayOrMonth(input));
+            Assert.AreEqual(0, CalculateTollFee.GetTollFee(input));
         }
 
         [DataTestMethod]
