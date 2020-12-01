@@ -101,7 +101,7 @@ namespace TollFeeCalculator
             return 0;
         }
 
-        public static bool IsPassageOnAFreeDayOrMonth(DateTime passage) {
+        private static bool IsPassageOnAFreeDayOrMonth(DateTime passage) {
             return
                 passage.Month == 7 ||
                 passage.DayOfWeek == DayOfWeek.Saturday ||
