@@ -37,13 +37,13 @@ namespace Test
         [DataRow("2020 - 07 - 28 10:13")]
         public void Should_return_True_if_DayOfTheWeek_is_saturday_or_sunday_or_during_july(string tollBoothPassageTime) {
             var input = DateTime.Parse(tollBoothPassageTime);
-            Assert.IsTrue(CalculateTollFee.free(input));
+            Assert.IsTrue(CalculateTollFee.IsPassageOnAFreeDayOrMonth(input));
         }
 
         [TestMethod]
         public void Should_return_False_if_DayOfTheWeek_is_Not_saturday_or_sunday_or_during_july() {
             var input = new DateTime(2020, 11, 30, 10, 13, 00);
-            Assert.IsFalse(CalculateTollFee.free(input));
+            Assert.IsFalse(CalculateTollFee.IsPassageOnAFreeDayOrMonth(input));
         }
 
         [DataTestMethod]

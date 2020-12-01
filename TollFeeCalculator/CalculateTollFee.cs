@@ -45,10 +45,9 @@ namespace TollFeeCalculator
 
         public static int TotalFeeCost(DateTime[] passages) {
             int totalFee = 0;
-            var passagesList = passages.ToList();
-            var passagesSortedAndDividedByDate = DivideIntoListByDate(OrderAscendingByDate(passagesList));
+            var passagesSortedAndDividedByDate = DivideIntoListByDate(OrderAscendingByDate(passages.ToList()));
             foreach (var dailyPassages in passagesSortedAndDividedByDate) {
-                totalFee += GetTotalFeeForDate(dailyPassages);
+                totalFee += CalculateDailyTotalOrMaxFee(dailyPassages);
             }
             return totalFee;
         }
@@ -64,10 +63,10 @@ namespace TollFeeCalculator
                 .ToList();
         }
 
-        public static int GetTotalFeeForDate(DateTime[] dailyPassages) {
+        public static int CalculateDailyTotalOrMaxFee(DateTime[] dailyPassages) {
             int dailyFee = 0;
             int hourlyFee = 0;
-            DateTime referencePassage = dailyPassages.First(); 
+            var referencePassage = dailyPassages.First(); 
             foreach (var passage in dailyPassages)
             {
                 if (IsLessThanAnHourApart(referencePassage, passage)) {
@@ -88,7 +87,7 @@ namespace TollFeeCalculator
         }
 
         public static int TollFeePass(DateTime d) {
-            if (free(d)) return 0;
+            if (IsPassageOnAFreeDayOrMonth(d)) return 0;
             int hour = d.Hour;
             int minute = d.Minute;
             if (hour == 6 && minute >= 0 && minute <= 29) return 8;
@@ -97,13 +96,13 @@ namespace TollFeeCalculator
             else if (hour == 8 && minute >= 0 && minute <= 29) return 13;
             else if (hour >= 8 && hour <= 14 && minute >= 30 && minute <= 59) return 8;
             else if (hour == 15 && minute >= 0 && minute <= 29) return 13;
-            else if (hour == 15 && minute >= 0 || hour == 16 && minute <= 59) return 18;
+            else if (hour == 15 && minute >= 30 || hour == 16 && minute <= 59) return 18;
             else if (hour == 17 && minute >= 0 && minute <= 59) return 13;
             else if (hour == 18 && minute >= 0 && minute <= 29) return 8;
             else return 0;
         }
 
-        public static bool free(DateTime day) {
+        public static bool IsPassageOnAFreeDayOrMonth(DateTime day) {
         return (int)day.DayOfWeek == 6 || (int)day.DayOfWeek == 0 || day.Month == 7;
         }
     }
