@@ -90,13 +90,15 @@ namespace TollFeeCalculator
         }
 
         public static int GetTollFee(DateTime passage) {
-            if (IsPassageOnAFreeDayOrMonth(passage)) return 0;
+            if (IsPassageOnAFreeDayOrMonth(passage)) 
+                return 0;
             var timeOfDay = passage.TimeOfDay;
             foreach (var tollFee in _tollFeeIntervals) {
                 var startOfInterval = tollFee.StartInterval;
                 var endOfInterval = tollFee.EndInterval;
                 var fee = tollFee.Fee;
-                if (timeOfDay >= startOfInterval && timeOfDay <= endOfInterval) return fee;
+                if (timeOfDay >= startOfInterval && timeOfDay <= endOfInterval) 
+                    return fee;
             }
             return 0;
         }
