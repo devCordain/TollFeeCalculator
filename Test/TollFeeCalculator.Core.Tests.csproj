@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\TollFeeCalculator\TollFeeCalculator.csproj" />
+    <ProjectReference Include="..\TollFeeCalculator\TollFeeCalculator.Core.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TollFeeCalculator
+namespace TollFeeCalculator.Core
 {
     class TollFeeInterval
     {

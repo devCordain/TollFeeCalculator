@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace TollFeeCalculator
+namespace TollFeeCalculator.Core
 {
-    public class CalculateTollFee
+    public class Calculator
     {  
         private static readonly List<TollFeeInterval> _tollFeeIntervals = new List<TollFeeInterval> {
                 new TollFeeInterval( 
@@ -47,16 +47,21 @@ namespace TollFeeCalculator
         private const int MAX_DAILY_FEE = 60;
 
         static void Main() {
-            PrintTotalFee(
-                CalculateTotalFee(
-                    GetPassagesFromFile(Environment.CurrentDirectory + "../../../../testData.txt")));
+            Run(Environment.CurrentDirectory + "../../../../testData.txt");
         }
 
-        public static void PrintTotalFee(double fee) {
+        public static void Run(string filePath) {
+            var passages = GetPassagesFromFile(filePath);
+            passages = ValidatePassages(passages);
+            passages = OrderAscendingByTime(passages);
+            PrintTotalFee(CalculateTotalFee(passages));
+        }
+
+        private static void PrintTotalFee(double fee) {
             Console.Write("The total fee for the inputfile is " + fee);
         }
 
-        public static List<DateTime> GetPassagesFromFile(string filePath)
+        public static IEnumerable<DateTime> GetPassagesFromFile(string filePath)
         {
             var passageData = System.IO.File.ReadAllText(filePath).Split(", ");
             List<DateTime> passages = new List<DateTime>();
@@ -65,57 +70,42 @@ namespace TollFeeCalculator
                     passages.Add(parsedPassage);
                 }
                 else {
-                    throw new ArgumentException("Could not convert passage to datetime");
+                    throw new FormatException("Could not convert passage to datetime");
                 }
             }
             return passages;
         }
 
-        public static int CalculateTotalFee(IEnumerable<DateTime> passages) {
-            int totalFee = 0;
-            var passagesSortedAndDividedByDate = DivideByDate(OrderAscendingByDate(passages.ToList()));
-            foreach (var dailyPassages in passagesSortedAndDividedByDate) {
-                var dailyTotalFee = CalculateDailyFee(dailyPassages);
-                if (dailyTotalFee > MAX_DAILY_FEE ) {
-                    totalFee += MAX_DAILY_FEE;
-                }
-                else {
-                    totalFee += dailyTotalFee;
+        public static IEnumerable<DateTime> ValidatePassages(IEnumerable<DateTime> passages) {
+            var firstDate = passages.First().Date;
+            foreach (var passage in passages) {
+                if (firstDate != passage.Date) {
+                    throw new ArgumentException("Passages on multiple days not supported");
                 }
             }
-            return totalFee;
+            return passages;
         }
 
-        private static IEnumerable<DateTime[]> DivideByDate(IEnumerable<DateTime> passages) {
-            return passages.ToList()
-                .GroupBy(x => x.Date)
-                .Select(y => y.ToArray())
-                .ToList();
-        } // TODO: beräkna kostnaden för en given inputfil innehållande datum och tider som en bil åker genom vägtullarna under en dag.
-        // Ska vi förvänta oss att vi får enbart 1 dag i filen? Testfilen innehåller fler dagar, så vi har byggt funktionalitet för att hantera det. 
-        // Ska vi ha flera dagar eller ska vi kasta exception? Ska vi skriva ut separerat per dag om det innnehåller flera dagar? Eller en totalsumma för samtliga dagar? Eller båda?
-
-        private static IEnumerable<DateTime> OrderAscendingByDate(IEnumerable<DateTime> passagesList) {
-            return passagesList.OrderBy(x => x.Date).ToList();
+        private static IEnumerable<DateTime> OrderAscendingByTime(IEnumerable<DateTime> passagesList) {
+            return passagesList.OrderBy(x => x.TimeOfDay);
         }
 
-        private static int CalculateDailyFee(IEnumerable<DateTime> dailyPassages) {
-            int totalDailyFee = 0;
+        public static int CalculateTotalFee(IEnumerable<DateTime> passages) {
+            int totalFee = 0;
             int totalHourlyFee = 0;
-            var referencePassage = dailyPassages.First(); 
-            foreach (var passage in dailyPassages)
-            {
+            var referencePassage = passages.First();
+            foreach (var passage in passages) {
                 if (IsLessThanAnHourApart(referencePassage, passage)) {
                     totalHourlyFee = Math.Max(GetTollFee(referencePassage), GetTollFee(passage));
                 }
                 else {
-                    totalDailyFee += totalHourlyFee;
+                    totalFee += totalHourlyFee;
                     totalHourlyFee = GetTollFee(passage);
                     referencePassage = passage;
                 }
             }
-            totalDailyFee += totalHourlyFee;
-            return totalDailyFee;
+            totalFee += totalHourlyFee;
+            return Math.Min(totalFee, MAX_DAILY_FEE);
         }
 
         private static bool IsLessThanAnHourApart(DateTime referencePassage, DateTime passage) { 

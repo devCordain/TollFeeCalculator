@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30717.126
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TollFeeCalculator", "TollFeeCalculator\TollFeeCalculator.csproj", "{BE712AAD-8D39-481D-BD2F-D5AD088F9710}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TollFeeCalculator.Core", "TollFeeCalculator\TollFeeCalculator.Core.csproj", "{BE712AAD-8D39-481D-BD2F-D5AD088F9710}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TollFeeCalculator.Tests", "Test\TollFeeCalculator.Tests.csproj", "{62901D7B-0592-457D-B994-825D6266E7B7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TollFeeCalculator.Core.Tests", "Test\TollFeeCalculator.Core.Tests.csproj", "{62901D7B-0592-457D-B994-825D6266E7B7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
