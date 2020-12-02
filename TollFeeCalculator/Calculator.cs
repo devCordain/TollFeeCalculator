@@ -61,12 +61,12 @@ namespace TollFeeCalculator.Core
             Console.Write("The total fee for the inputfile is " + fee);
         }
 
-        public static IEnumerable<DateTime> GetPassagesFromFile(string filePath)
+        private static IEnumerable<DateTime> GetPassagesFromFile(string filePath)
         {
             var passageData = System.IO.File.ReadAllText(filePath).Split(", ");
             List<DateTime> passages = new List<DateTime>();
             foreach (var passage in passageData) {
-                if (DateTime.TryParse(passage, out DateTime parsedPassage)) {
+                if (DateTime.TryParse(passage, out var parsedPassage)) {
                     passages.Add(parsedPassage);
                 }
                 else {
@@ -76,12 +76,11 @@ namespace TollFeeCalculator.Core
             return passages;
         }
 
-        public static IEnumerable<DateTime> ValidatePassages(IEnumerable<DateTime> passages) {
+        private static IEnumerable<DateTime> ValidatePassages(IEnumerable<DateTime> passages) {
             var firstDate = passages.First().Date;
-            foreach (var passage in passages) {
-                if (firstDate != passage.Date) {
-                    throw new ArgumentException("Passages on multiple days not supported");
-                }
+            if (passages.Any(passage => firstDate != passage.Date))
+            {
+                throw new ArgumentException("Passages on multiple days not supported");
             }
             return passages;
         }
@@ -91,8 +90,8 @@ namespace TollFeeCalculator.Core
         }
 
         public static int CalculateTotalFee(IEnumerable<DateTime> passages) {
-            int totalFee = 0;
-            int totalHourlyFee = 0;
+            var totalFee = 0;
+            var totalHourlyFee = 0;
             var referencePassage = passages.First();
             foreach (var passage in passages) {
                 if (IsLessThanAnHourApart(referencePassage, passage)) {
