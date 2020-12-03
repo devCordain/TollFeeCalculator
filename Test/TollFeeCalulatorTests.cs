@@ -8,6 +8,18 @@ namespace Test
     [TestClass]
     public class TollFeeCalculatorTests
     {
+        // Tio buggar vi har hittat i ursprungskoden
+        // 1. Sista passagen i indata försvinner under parse till datetime (dates array är mindre än antal passager)
+        // 2. Programmet accepterar indata med flera datum utan att kasta exception (inga kontroller av indata)
+        // 3. Utskriften saknar mellanrum mellan sträng och resultat (felaktigt skriven sträng)
+        // 4. Passager på fredagar debiteras inte (fel integer)
+        // 5. Passager på söndagar debiteras (fel integer)
+        // 6. Debiteringen understiger aldrig 60 (Max istället för Min)
+        // 7. Debiteringen kan överstiga 60 (Max istället för Min)
+        // 8. Passager ej inom en timme kan undvika debitering (Använder ej timmeskomponent i jämförelse)
+        // 9. Passager inom en timme kan debiteras (Adderar alltid en kostnad)
+        // 10. Passager under den första halvtimmen för timmarna 9-14 debiteras inte (Felaktig if sats)
+
         [DataTestMethod]
         [DataRow("2020 - 11 - 28 10:13")]
         [DataRow("2020 - 11 - 29 10:13")] 

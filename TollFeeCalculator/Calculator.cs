@@ -78,8 +78,7 @@ namespace TollFeeCalculator.Core
 
         private static IEnumerable<DateTime> ValidatePassages(IEnumerable<DateTime> passages) {
             var firstDate = passages.First().Date;
-            if (passages.Any(passage => firstDate != passage.Date))
-            {
+            if (passages.Any(passage => firstDate != passage.Date)) {
                 throw new ArgumentException("Passages on multiple days not supported");
             }
             return passages;
